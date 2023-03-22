@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ChainConverter;
 use App\Jobs\FileConverter;
-use Illuminate\Support\Str;
+use App\Jobs\ThumbCreator;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
-use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
-use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
-use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
-
+use Illuminate\Support\Str;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
+use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
+
+use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
+use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
 
 class FilesystemController extends Controller
 {
@@ -62,8 +64,10 @@ class FilesystemController extends Controller
             $filepath = $file->move($dir, $filename);
             $filepath = Str::replace('\\', '/', $filepath);
 
-            $coverter = new FileConverter($filepath, $dir);
-            \dispatch($coverter);
+            // $coverter = new FileConverter($filepath, $dir);
+            // $thumb = new ThumbCreator($filepath, $dir);
+            $converter = new ChainConverter($filepath);
+            \dispatch($converter);
             return response('success', 200);
         }
 
