@@ -10,7 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 
-class ChainConverter implements ShouldQueue
+class PostCreator implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -34,12 +34,14 @@ class ChainConverter implements ShouldQueue
      */
     public function handle()
     {
-        Bus::chain([
-            new ThumbCreator($this->file),
-            new ConvertLowQuality($this->file),
-            new ConvertMidQuality($this->file),
-            new ConvertHighQuality($this->file),
-            new MasterPlaylist($this->file),
-        ])->dispatch();
+        Bus::chain(
+            [
+                new ThumbCreator($this->file),
+                new ConvertLowQuality($this->file),
+                new ConvertMidQuality($this->file),
+                new ConvertHighQuality($this->file),
+                new MasterPlaylist($this->file),
+            ]
+        )->dispatch();
     }
 }

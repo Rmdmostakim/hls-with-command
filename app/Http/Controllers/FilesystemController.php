@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ChainConverter;
 use App\Jobs\FileConverter;
+use App\Jobs\Post;
+use App\Jobs\PostCreator;
 use App\Jobs\ThumbCreator;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -64,9 +66,7 @@ class FilesystemController extends Controller
             $filepath = $file->move($dir, $filename);
             $filepath = Str::replace('\\', '/', $filepath);
 
-            // $coverter = new FileConverter($filepath, $dir);
-            // $thumb = new ThumbCreator($filepath, $dir);
-            $converter = new ChainConverter($filepath);
+            $converter = new PostCreator($filepath);
             \dispatch($converter);
             return response('success', 200);
         }
