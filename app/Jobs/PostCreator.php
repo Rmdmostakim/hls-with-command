@@ -2,16 +2,17 @@
 
 namespace App\Jobs;
 
+use App\Models\Feed;
 use App\Models\Post;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Event;
 
 class PostCreator implements ShouldQueue
 {
@@ -24,10 +25,12 @@ class PostCreator implements ShouldQueue
      */
     public $timeout = 3600 * 5;
     public $failOnTimeout = true;
-    protected $file;
-    public function __construct($file)
+    protected $file, $uuid, $name;
+    public function __construct($file, $uuid)
     {
         $this->file = $file;
+        $this->uuid = $uuid;
+        $this->name = pathinfo($file, PATHINFO_FILENAME);
     }
 
     /**
@@ -48,12 +51,16 @@ class PostCreator implements ShouldQueue
                 $thumb, $low, $mid, $high, $master,
             ]
         )->dispatch();
-        Event::listen(JobProcessed::class, function (JobProcessed $event) use ($low, $master) {
+        Event::listen(JobProcessed::class, function (JobProcessed $event) use ($thumb, $low, $master) {
+            if ($event->job->resolveName() === get_class($thumb)) {
+                Feed::where('uuid', $this->uuid)->update(['thumbnail' =>   env('APP_URL') . '/' . $this->name . '/' . $this->name . '.jpg']);
+            }
             if ($event->job->resolveName() === get_class($low)) {
-                Post::where('id', 1)->update(['playlist' => 'low']);
+                $resolution = '426x240';
+                Feed::where('uuid', $this->uuid)->update(['src' =>  env('APP_URL') . '/api/watch/' . $this->name . '_' . $resolution . '.m3u8']);
             }
             if ($event->job->resolveName() === get_class($master)) {
-                Post::where('id', 1)->update(['playlist' => 'master']);
+                Feed::where('uuid', $this->uuid)->update(['src' =>   env('APP_URL') . '/api/watch/' . $this->name . '.m3u8']);
             }
         });
     }
