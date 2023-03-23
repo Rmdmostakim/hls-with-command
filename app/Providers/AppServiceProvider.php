@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\FeedRepositoryServices;
+use App\Services\TokenRepositoryServices;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +15,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // token services register
+        $this->app->singleton('TokenRepositoryServices', function ($app) {
+            return new TokenRepositoryServices;
+        });
+        // feed services register
+        $this->app->singleton('FeedRepositoryServices', function ($app) {
+            return new FeedRepositoryServices;
+        });
     }
 
     /**
