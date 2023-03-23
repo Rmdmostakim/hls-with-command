@@ -57,10 +57,10 @@ class PostCreator implements ShouldQueue
             }
             if ($event->job->resolveName() === get_class($low)) {
                 $resolution = '426x240';
-                Feed::where('uuid', $this->uuid)->update(['src' =>  $this->name . '_' . $resolution . '.m3u8']);
+                Feed::where('uuid', $this->uuid)->update(['src' =>  env('APP_URL') . '/api/watch/' . $this->name . '_' . $resolution . '.m3u8']);
             }
             if ($event->job->resolveName() === get_class($master)) {
-                Feed::where('uuid', $this->uuid)->update(['src' =>   $this->name . '.m3u8']);
+                Feed::where('uuid', $this->uuid)->update(['src' =>   env('APP_URL') . '/api/watch/' . $this->name . '.m3u8']);
             }
         });
     }
