@@ -65,14 +65,10 @@ class FilesystemController extends Controller
             $filename = $dir . '.' . $file->extension();
             $filepath = $file->move($dir, $filename);
             $filepath = Str::replace('\\', '/', $filepath);
-
-            $converter = new PostCreator($filepath);
-            \dispatch($converter);
-            return response('success', 200);
+            $path = env('APP_URL') . '/' . $filepath;
+            return response($path, 200);
         }
-
         $handler = $fileReceived->handler();
-
         return response()->json([
             "done" => $handler->getPercentageDone(),
             'status' => true

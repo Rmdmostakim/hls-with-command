@@ -10,7 +10,7 @@ class Feed extends Model
     use HasFactory;
     protected $fillable = [
         'uuid',
-        'title',
+        'caption',
         'user_uuid',
         'user_type',
         'feed_p_category_uuid',

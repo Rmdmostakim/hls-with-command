@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Token;
 use Feed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Token;
 
 class FeedController extends Controller
 {
@@ -42,17 +42,16 @@ class FeedController extends Controller
             'caption' => 'bail|required|string|min:3',
             'p_category_uuid' => 'bail|required|string|exists:feed_p_categories,uuid',
             'products.*' => 'bail|required|string|exists:products,uuid',
-            'images.*' => 'bail|nullable|image|mimes:jpg,jpeg,webp,png',
-            'video' => 'bail|nullable|file|mimes:mp4,mov,mkv',
+            'images.*' => 'bail|nullable|string',
+            'video' => 'bail|nullable|string',
             'type' => 'bail|required|max:2',
         ]);
         if ($validator->fails()) {
             return response($validator->messages(), 422);
         }
-        $images = $request->file('images');
-        $video = $request->file('video');
+
         $token = $request->header('token');
-        $validated = $request->only(['caption', 'p_category_uuid', 'products', 'type']);
-        return Feed::createFeed($validated, $token, $images, $video, $request);
+        $validated = $request->only(['caption', 'p_category_uuid', 'products', 'images', 'video', 'type']);
+        return Feed::createFeed($validated, $token);
     }
 }
