@@ -24,6 +24,6 @@ class FeedGCategory extends Model
 
     public function pCat()
     {
-        return $this->hasMany(FeedGCategory::class, 'g_category_uuid', 'uuid');
+        return $this->hasMany(FeedPCategory::class, 'g_category_uuid', 'uuid');
     }
 }
