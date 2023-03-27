@@ -85,9 +85,19 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 \dispatch($postJob);
                 return response('success', 201);
             }
-            return response('failed', 406);
         } else {
-            return 'image type';
+            foreach ($credentials['images'] as $image) {
+                $filePath = Str::replace(env('APP_URL') . '/', '', $image);
+                $exists = File::exists($filePath);
+                if (!$exists) {
+                    $response = ['images' => array('invalid images url')];
+                    return response($response, 422);
+                }
+            }
+            $store = $this->storeFeed($credentials, $token);
+            if ($store) {
+                return response('success', 201);
+            }
         }
         return response(['message' => 'not accepted'], 406);
     }
@@ -105,7 +115,8 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 'feed_p_category_uuid' => $credentials['p_category_uuid'],
                 'product_uuid' => json_encode($productIds),
                 'type' => $credentials['type'],
-                'src' => $credentials['video']
+                'src' => $credentials['type'] == 0 ? $credentials['video'] : json_encode($credentials['images']),
+                'is_active' => $credentials['type'] == 0 ? null : 1,
             ]);
             return $result;
         } catch (Exception $e) {
