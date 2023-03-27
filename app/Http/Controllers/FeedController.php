@@ -54,4 +54,9 @@ class FeedController extends Controller
         $validated = $request->only(['caption', 'p_category_uuid', 'products', 'images', 'video', 'type']);
         return Feed::createFeed($validated, $token);
     }
+    // get all feed
+    public function getAllFeed()
+    {
+        return Feed::getAllFeed();
+    }
 }

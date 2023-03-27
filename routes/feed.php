@@ -9,3 +9,5 @@ Route::post('pcat/store', [FeedController::class, 'storePcat']);
 Route::group(['prefix' => 'merchant', 'as' => 'merchant'], function () {
     Route::post('create', [FeedController::class, 'createFeed']);
 });
+
+Route::get('get/all', [FeedController::class, 'getAllFeed']);

@@ -22,6 +22,8 @@ class Feed extends Model
         'thumbnail',
         'is_active',
         'status',
+        'views',
+        'share',
     ];
     protected $attributes = [
         'product_uuid' => null,
@@ -31,8 +33,39 @@ class Feed extends Model
         'src' => null,
         'is_active' => 0,
         'status' => 0,
+        'views' => 0,
+        'share' => 0,
     ];
     protected $hidden = [
         'id',
     ];
+
+    public function merchant()
+    {
+        return $this->hasOne(Merchant::class, 'uuid', 'user_uuid');
+    }
+    public function instructor()
+    {
+        return $this->hasOne(Instructor::class, 'uuid', 'user_uuid');
+    }
+
+    use \Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
+
+    public function product()
+    {
+        return $this->belongsToJson(Product::class, 'product_uuid');
+    }
+    public function workshop()
+    {
+        return $this->belongsToJson(Workshop::class, 'workshop_uuid');
+    }
+
+    // public function like()
+    // {
+    //     return $this->hasMany(PostLike::class, 'post_uuid', 'uuid');
+    // }
+    // public function comment()
+    // {
+    //     return $this->hasMany(PostComment::class, 'post_uuid', 'uuid');
+    // }
 }
