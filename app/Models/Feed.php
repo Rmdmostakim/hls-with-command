@@ -20,6 +20,8 @@ class Feed extends Model
         'type',
         'src',
         'thumbnail',
+        'is_active',
+        'status',
     ];
     protected $attributes = [
         'product_uuid' => null,
@@ -27,6 +29,8 @@ class Feed extends Model
         'workshop_uuid' => null,
         'thumbnail' => null,
         'src' => null,
+        'is_active' => 0,
+        'status' => 0,
     ];
     protected $hidden = [
         'id',
