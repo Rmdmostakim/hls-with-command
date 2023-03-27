@@ -39,7 +39,9 @@ class Feed extends Model
     protected $hidden = [
         'id',
     ];
-
+    protected $casts = [
+        'product_uuid' => 'array',
+    ];
     public function merchant()
     {
         return $this->hasOne(Merchant::class, 'uuid', 'user_uuid');
