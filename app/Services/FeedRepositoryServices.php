@@ -137,6 +137,6 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     // get all g cat 
     public function getAllGcat()
     {
-        return FeedGCategory::with('pCat')->get();
+        return FeedGCategory::with('category')->get();
     }
 }

@@ -22,7 +22,7 @@ class FeedGCategory extends Model
         'id',
     ];
 
-    public function pCat()
+    public function category()
     {
         return $this->hasMany(FeedPCategory::class, 'g_category_uuid', 'uuid');
     }
