@@ -6,6 +6,7 @@ use App\Jobs\PostCreator;
 use App\Models\Feed;
 use App\Models\FeedGCategory;
 use App\Models\FeedPCategory;
+use App\Models\Product;
 use App\Repositories\FeedRepositoryInterface;
 use Exception;
 use Illuminate\Http\Request;
@@ -93,6 +94,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
     protected function storeFeed($credentials, $token)
     {
+        $productIds = Product::whereIn('uuid', $credentials['products'])->pluck('id');
         $tokenInfo = Token::decode($token);
         try {
             $result = Feed::create([
@@ -101,7 +103,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 'user_uuid' => $tokenInfo['uuid'],
                 'user_type' => 0,
                 'feed_p_category_uuid' => $credentials['p_category_uuid'],
-                'product_uuid' => json_encode($credentials['products']),
+                'product_uuid' => json_encode($productIds),
                 'type' => $credentials['type'],
                 'src' => $credentials['video']
             ]);
