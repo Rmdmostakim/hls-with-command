@@ -137,18 +137,11 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
             'product.details.cover',
 
-            'gallery',
-
-            'like',
-
-            'comment.userInfo:user_uuid,user_name',
-
-            'comment.profile:user_uuid,path',
-
-            'comment.reply.userInfo:user_uuid,user_name',
-
-            'comment.reply.profile:user_uuid,path',
-
         )->orderBy('id', 'DESC')->paginate(30);
+    }
+    // get all g cat 
+    public function getAllGcat()
+    {
+        return FeedGCategory::with('pCat')->get();
     }
 }

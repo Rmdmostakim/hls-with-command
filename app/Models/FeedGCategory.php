@@ -21,4 +21,9 @@ class FeedGCategory extends Model
     protected $hidden = [
         'id',
     ];
+
+    public function pCat()
+    {
+        return $this->hasMany(FeedGCategory::class, 'g_category_uuid', 'uuid');
+    }
 }
