@@ -12,3 +12,4 @@ Route::group(['prefix' => 'merchant', 'as' => 'merchant'], function () {
 
 Route::get('get/all', [FeedController::class, 'getAllFeed']);
 Route::get('gcat/get/all', [FeedController::class, 'getAllGcat']);
+Route::get('pcat/get/all', [FeedController::class, 'getAllPcat']);

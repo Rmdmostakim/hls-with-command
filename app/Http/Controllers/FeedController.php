@@ -64,4 +64,9 @@ class FeedController extends Controller
     {
         return Feed::getAllGcat();
     }
+    // get all  category
+    public function getAllPcat()
+    {
+        return Feed::getAllPcat();
+    }
 }

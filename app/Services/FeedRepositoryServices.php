@@ -139,4 +139,9 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     {
         return FeedGCategory::with('category')->get();
     }
+    // get all  category
+    public function getAllPcat()
+    {
+        return FeedPCategory::all();
+    }
 }
