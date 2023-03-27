@@ -128,27 +128,10 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     public function getAllFeed()
     {
         return Feed::with(
-
             'merchant.info:merchant_uuid,company_logo',
-
             'product:id,uuid,name',
-
             'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
-
             'product.details.cover',
-
-            'gallery',
-
-            'like',
-
-            'comment.userInfo:user_uuid,user_name',
-
-            'comment.profile:user_uuid,path',
-
-            'comment.reply.userInfo:user_uuid,user_name',
-
-            'comment.reply.profile:user_uuid,path',
-
-        )->orderBy('id', 'DESC')->paginate(30);
+        )->orderBy('id', 'DESC')->paginate(10);
     }
 }
