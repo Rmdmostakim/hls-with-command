@@ -128,16 +128,11 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     public function getAllFeed()
     {
         return Feed::with(
-
             'merchant.info:merchant_uuid,company_logo',
-
             'product:id,uuid,name',
-
             'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
-
             'product.details.cover',
-
-        )->orderBy('id', 'DESC')->paginate(30);
+        )->orderBy('id', 'DESC')->paginate(10);
     }
     // get all g cat 
     public function getAllGcat()
