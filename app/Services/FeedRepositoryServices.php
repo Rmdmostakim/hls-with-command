@@ -101,7 +101,6 @@ class FeedRepositoryServices implements FeedRepositoryInterface
         }
         return response(['message' => 'not accepted'], 406);
     }
-
     protected function storeFeed($credentials, $token)
     {
         $productIds = Product::whereIn('uuid', $credentials['products'])->pluck('id');
@@ -143,5 +142,22 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     public function getAllPcat()
     {
         return FeedPCategory::all();
+    }
+    // get all merchant feed
+    public function  getAllMerchantFeed($token)
+    {
+        $tokenInfo = Token::decode($token);
+        return Feed::where('user_uuid', $tokenInfo['uuid'])->with(
+            'product:id,uuid,name',
+            'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
+            'product.details.cover',
+        )->orderBy('id', 'DESC')->paginate(10);
+    }
+    // get all search product of merchant
+    public function  getAllSearchItems($credentials, $token)
+    {
+        $tokenInfo = Token::decode($token);
+        $products = Product::where('merchant_uuid', $tokenInfo['uuid'])->where('name', 'like', '%' . $credentials['key'] . '%')->select('name', 'uuid')->with('details:product_uuid,price,cover,stock,discount,discount_type,discount_duration', 'details.cover')->orderBy('id', 'DESC')->get();
+        return response(['products' => $products], 200);
     }
 }

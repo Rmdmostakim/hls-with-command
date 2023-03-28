@@ -8,6 +8,8 @@ Route::post('pcat/store', [FeedController::class, 'storePcat']);
 // Route::post('create', [FeedController::class, 'createFeed']);
 Route::group(['prefix' => 'merchant', 'as' => 'merchant'], function () {
     Route::post('create', [FeedController::class, 'createFeed']);
+    Route::get('search', [FeedController::class, 'getAllSearchItems']);
+    Route::get('feed/get', [FeedController::class, 'getAllMerchantFeed']);
 });
 
 Route::get('get/all', [FeedController::class, 'getAllFeed']);

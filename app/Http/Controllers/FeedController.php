@@ -69,4 +69,23 @@ class FeedController extends Controller
     {
         return Feed::getAllPcat();
     }
+    // get all search product of merchant
+    public function getAllSearchItems(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'key' => 'bail|required|string',
+        ]);
+        if ($validator->fails()) {
+            return response($validator->messages(), 422);
+        }
+        $token = $request->header('token');
+        $validated = $request->only(['key']);
+        return Feed::getAllSearchItems($validated, $token);
+    }
+    // get all merchant feed
+    public function getAllMerchantFeed(Request $request)
+    {
+        $token = $request->header('token');
+        return Feed::getAllFeed($token);
+    }
 }
