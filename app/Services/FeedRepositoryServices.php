@@ -115,10 +115,10 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 'user_uuid' => $tokenInfo['uuid'],
                 'user_type' => 0,
                 'feed_p_category_uuid' => $credentials['p_category_uuid'],
-                'product_uuid' => json_encode($productIds),
+                'product_uuid' => $productIds,
                 'type' => $credentials['type'],
                 'src' => $credentials['type'] == 0 ? $credentials['video'] : json_encode($credentials['images']),
-                'is_active' => $credentials['type'] == 0 ? null : 1,
+                'is_active' => $credentials['type'] == 0 ? 0 : 1,
             ]);
             return $result;
         } catch (Exception $e) {
@@ -161,7 +161,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     {
         $tokenInfo = Token::decode($token);
         $products = Product::where('merchant_uuid', $tokenInfo['uuid'])->where('name', 'like', '%' . $credentials['key'] . '%')->select('name', 'uuid')->with('details:product_uuid,price,cover,stock,discount,discount_type,discount_duration', 'details.cover')->orderBy('id', 'DESC')->get();
-        return response(['products' => $products], 200);
+        return response($products, 200);
     }
     // increase feed view
     public function increaseView($validated)
