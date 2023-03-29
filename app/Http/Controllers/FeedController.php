@@ -88,4 +88,127 @@ class FeedController extends Controller
         $token = $request->header('token');
         return Feed::getAllFeed($token);
     }
+    // increase feed view
+    public function increaseView(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'uuid' => 'bail|required|string|exists:feeds,uuid',
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $validated = $request->only(['uuid']);
+
+        return Feed::increaseView($validated);
+    }
+    // incease feed share
+    public function increaseShare(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'uuid' => 'bail|required|string|exists:feeds,uuid',
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $validated = $request->only(['uuid']);
+
+        return Feed::increaseShare($validated);
+    }
+    // store feed like
+    public function storeFeedLike(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'feed_uuid' => 'bail|required|string|exists:feeds,uuid',
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $token = $request->header('token');
+
+        $validated = $request->only(['feed_uuid']);
+
+        return Feed::storeFeedLike($validated, $token);
+    }
+    // store feed comment
+    public function storeFeedComment(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+
+            'feed_uuid' => 'bail|nullable|string|exists:feeds,uuid',
+
+            'parent_uuid' => 'bail|nullable|string|exists:feed_comments,uuid',
+
+            'comment' => 'bail|required|string|max:500',
+
+            'attachment' => 'bail|nullable|mimes:jpg,jpeg,png,pdf',
+
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $file = $request->file('attachment');
+
+        $token = $request->header('token');
+
+        $validated = $request->only(['feed_uuid', 'parent_uuid', 'comment']);
+
+        return Feed::storeFeedComment($validated, $token, $file);
+    }
+    // update feed comment
+    public function updateFeedComment(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+
+            'uuid' => 'bail|nullable|string|exists:feed_comments,uuid',
+
+            'comment' => 'bail|required|string|min:1|max:500',
+
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $token = $request->header('token');
+
+        $validated = $request->only(['uuid', 'comment']);
+
+        return Feed::updateFeedComment($validated, $token);
+    }
+    // delete feed comment by comment uuid
+    public function deleteFeedComment(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+
+            'uuid' => 'bail|nullable|string|exists:feed_comments,uuid',
+
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $token = $request->header('token');
+
+        $validated = $request->only(['uuid']);
+
+        return Feed::deleteFeedComment($validated, $token);
+    }
 }

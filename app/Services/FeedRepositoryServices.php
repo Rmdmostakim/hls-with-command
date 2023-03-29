@@ -2,24 +2,27 @@
 
 namespace App\Services;
 
-use App\Jobs\PostCreator;
-use App\Models\Feed;
-use App\Models\FeedGCategory;
-use App\Models\FeedPCategory;
-use App\Models\Product;
-use App\Repositories\FeedRepositoryInterface;
+use Token;
 use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
+use FileSystem;
+use App\Models\Feed;
+use App\Models\Product;
+use App\Jobs\PostCreator;
+use App\Models\FeedComment;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\FeedGCategory;
+use App\Models\FeedLike;
+use App\Models\FeedPCategory;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
+use App\Repositories\FeedRepositoryInterface;
+use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
+use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
+use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
-use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
-use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
-use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
-use Token;
 
 class FeedRepositoryServices implements FeedRepositoryInterface
 {
@@ -159,5 +162,176 @@ class FeedRepositoryServices implements FeedRepositoryInterface
         $tokenInfo = Token::decode($token);
         $products = Product::where('merchant_uuid', $tokenInfo['uuid'])->where('name', 'like', '%' . $credentials['key'] . '%')->select('name', 'uuid')->with('details:product_uuid,price,cover,stock,discount,discount_type,discount_duration', 'details.cover')->orderBy('id', 'DESC')->get();
         return response(['products' => $products], 200);
+    }
+    // increase feed view
+    public function increaseView($validated)
+    {
+
+        $exists = Feed::where('uuid', $validated)->first();
+
+        if ($exists) {
+
+            $views = $exists->views;
+
+            $exists->views = $views + 1;
+
+            $result =  $exists->update();
+
+            if ($result) {
+
+                return response(['message' => 'success'], 202);
+            }
+        }
+
+        return response(['message' => 'not found'], 406);
+    }
+    // increase feed share
+    public function increaseShare($credentials)
+    {
+
+        $exists = Feed::where('uuid', $credentials['uuid'])->first();
+
+        if ($exists) {
+
+            $share = $exists->share;
+
+            $exists->share = $share + 1;
+
+            $result =  $exists->update();
+
+            if ($result) {
+
+                return response(['message' => 'updated'], 202);
+            }
+        }
+
+        return response(['message' => 'not found'], 406);
+    }
+    // store feed like
+    public function storeFeedLike($credentials, $token)
+    {
+        $tokenInfo = Token::decode($token);
+        $exists = FeedLike::where('feed_uuid', $credentials['feed_uuid'])->where('user_uuid', $tokenInfo['uuid'])->first();
+        if ($exists) {
+            $result = FeedLike::where('feed_uuid', $credentials['feed_uuid'])->where('user_uuid', $tokenInfo['uuid'])->delete();
+        } else {
+            $result = FeedLike::create([
+                'uuid' => Str::uuid(),
+                'feed_uuid' => $credentials['feed_uuid'],
+                'user_uuid' => $tokenInfo['uuid'],
+            ]);
+        }
+        if ($result) {
+            return response($result, 201);
+        }
+        return response('failed', 406);
+    }
+    // store feed comment
+    public function storeFeedComment($credentials, $token, $file)
+    {
+
+        $tokenInfo = Token::decode($token);
+
+        $path = null;
+
+        if ($file) {
+
+            $path = FileSystem::storeFile($file, 'comment/attachtment');
+        }
+
+        try {
+
+            $result = FeedComment::create([
+
+                'uuid' => Str::uuid(),
+
+                'feed_uuid' => $credentials['feed_uuid'],
+
+                'user_uuid' => $tokenInfo['uuid'],
+
+                'parent_uuid' => $credentials['parent_uuid'],
+
+                'comment' => $credentials['comment'],
+
+                'attachment' => $path,
+
+            ]);
+
+            $result = FeedComment::where('uuid', $result->uuid)->with('userInfo:user_uuid,user_name', 'profile:user_uuid,path')->first();
+        } catch (Exception $e) {
+
+            return $e;
+
+            Log::error($e);
+
+            $result = false;
+        }
+
+        if ($result) {
+
+            return response($result, 201);
+        }
+
+        $deleteFile = FileSystem::deleteFile($path);
+
+        return response(['message' => 'not acceptable'], 406);
+    }
+    // update feed comment
+    public function updateFeedComment($credentials, $token)
+    {
+
+        $tokenInfo = Token::decode($token);
+
+        try {
+
+            $result = FeedComment::where('uuid', $credentials['uuid'])->where('user_uuid', $tokenInfo['uuid'])->update([
+
+                'comment' => $credentials['comment'],
+
+            ]);
+        } catch (Exception $e) {
+
+            log::error($e);
+
+            $result = false;
+        }
+
+        if ($result) {
+
+            $updateData = FeedComment::where('uuid', $credentials['uuid'])->where('user_uuid', $tokenInfo['uuid'])->first();
+
+            return response(
+                $updateData,
+                201
+            );
+        }
+
+        // $deleteFile = FileSystem::deleteFile($path);
+
+        return response(['message' => 'not acceptable'], 406);
+    }
+    // delete feed comment
+    public function deleteFeedComment($credentials, $token)
+    {
+
+        $tokenInfo = Token::decode($token);
+
+        try {
+
+            $result = FeedComment::where('user_uuid', $tokenInfo['uuid'])->where('uuid', $credentials['uuid'])->orWhere('parent_uuid', $credentials['uuid'])->delete();
+        } catch (Exception $e) {
+
+            log::error($e);
+
+            $result = false;
+        }
+
+        if ($result) {
+
+            return response(['message' => 'deleted'], 410);
+        }
+
+
+        return response(['message' => 'not acceptable'], 406);
     }
 }
