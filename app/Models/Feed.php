@@ -62,12 +62,12 @@ class Feed extends Model
         return $this->belongsToJson(Workshop::class, 'workshop_uuid');
     }
 
-    // public function like()
-    // {
-    //     return $this->hasMany(PostLike::class, 'post_uuid', 'uuid');
-    // }
-    // public function comment()
-    // {
-    //     return $this->hasMany(PostComment::class, 'post_uuid', 'uuid');
-    // }
+    public function like()
+    {
+        return $this->hasMany(FeedLike::class, 'feed_uuid', 'uuid');
+    }
+    public function comment()
+    {
+        return $this->hasMany(FeedComment::class, 'feed_uuid', 'uuid');
+    }
 }
