@@ -231,6 +231,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'Token' => App\Facades\TokenRepositoryServicesFacade::class,
         'Feed' => App\Facades\FeedRepositoryServicesFacade::class,
+        'Learn' => App\Facades\LearnRepositoryServicesFacade::class,
 
     ],
 

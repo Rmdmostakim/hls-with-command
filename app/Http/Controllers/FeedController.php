@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Feed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Token;
+
 
 class FeedController extends Controller
 {
     // store grand category for feed
     public function storeGcat(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'name' => 'bail|required|string|min:3|unique:feed_g_categories,name',
         ]);

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\FeedRepositoryServices;
+use App\Services\LearnRepositoryServices;
 use App\Services\TokenRepositoryServices;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
         // feed services register
         $this->app->singleton('FeedRepositoryServices', function ($app) {
             return new FeedRepositoryServices;
+        });
+        // feed services register
+        $this->app->singleton('LearnRepositoryServices', function ($app) {
+            return new LearnRepositoryServices;
         });
     }
 

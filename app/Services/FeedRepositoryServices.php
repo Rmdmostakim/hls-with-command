@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+
 use Token;
 use Exception;
 use FileSystem;
@@ -10,19 +11,13 @@ use App\Models\Product;
 use App\Jobs\PostCreator;
 use App\Models\FeedComment;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Models\FeedGCategory;
 use App\Models\FeedLike;
 use App\Models\FeedPCategory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Validator;
 use App\Repositories\FeedRepositoryInterface;
-use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
-use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
-use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
-use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
-use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
+
 
 class FeedRepositoryServices implements FeedRepositoryInterface
 {
@@ -129,7 +124,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     // get all feed
     public function getAllFeed()
     {
-        return Feed::with(
+        return Feed::where('is_active', 1)->with(
             'merchant.info:merchant_uuid,company_logo',
             'product:id,uuid,name',
             'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
