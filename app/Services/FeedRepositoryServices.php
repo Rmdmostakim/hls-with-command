@@ -338,4 +338,24 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
         return response(['message' => 'not acceptable'], 406);
     }
+    // get feed by uuid
+    public function getFeedByUuid($credentials)
+    {
+        return  Feed::where('uuid', $credentials['uuid'])->where('is_active', 1)->with(
+            'merchant.info:merchant_uuid,company_logo',
+            'product:id,uuid,name',
+            'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
+            'product.details.cover',
+            'like',
+
+            'comment.userInfo:user_uuid,user_name',
+
+            'comment.profile:user_uuid,path',
+
+            'comment.reply.userInfo:user_uuid,user_name',
+
+            'comment.reply.profile:user_uuid,path',
+
+        )->first();
+    }
 }
