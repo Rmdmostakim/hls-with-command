@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-
 use Token;
 use Exception;
 use FileSystem;
@@ -11,13 +10,19 @@ use App\Models\Product;
 use App\Jobs\PostCreator;
 use App\Models\FeedComment;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use App\Models\FeedGCategory;
 use App\Models\FeedLike;
 use App\Models\FeedPCategory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
 use App\Repositories\FeedRepositoryInterface;
-
+use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
+use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
+use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
+use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
+use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
 
 class FeedRepositoryServices implements FeedRepositoryInterface
 {
@@ -103,6 +108,9 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     {
         $productIds = Product::whereIn('uuid', $credentials['products'])->pluck('id');
         $tokenInfo = Token::decode($token);
+        if ($credentials['type'] == 0) {
+            $myarray[] = $credentials['video'];
+        }
         try {
             $result = Feed::create([
                 'uuid' => Str::uuid(),
@@ -112,7 +120,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 'feed_p_category_uuid' => $credentials['p_category_uuid'],
                 'product_uuid' => $productIds,
                 'type' => $credentials['type'],
-                'src' => $credentials['type'] == 0 ? $credentials['video'] : json_encode($credentials['images']),
+                'src' => $credentials['type'] == 0 ? json_encode($myarray) : $credentials['images'],
                 'is_active' => $credentials['type'] == 0 ? 0 : 1,
             ]);
             return $result;
@@ -138,6 +146,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             'comment.reply.userInfo:user_uuid,user_name',
 
             'comment.reply.profile:user_uuid,path',
+
         )->orderBy('id', 'DESC')->paginate(10);
     }
     // get all g cat 
