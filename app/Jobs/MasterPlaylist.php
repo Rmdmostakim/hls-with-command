@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Feed;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,10 +22,11 @@ class MasterPlaylist implements ShouldQueue
      */
     public $timeout = 120;
     public $failOnTimeout = true;
-    protected $file, $name;
-    public function __construct($file)
+    protected $file, $name, $uuid;
+    public function __construct($file, $uuid)
     {
         $this->file = 'public/' . $file;
+        $this->uuid = $uuid;
         $this->name =  pathinfo($file, PATHINFO_FILENAME);
     }
 
@@ -47,6 +49,7 @@ class MasterPlaylist implements ShouldQueue
         }
         $playlist_content .= "#EXT-X-ENDLIST\n";
         $filename = 'public/' . $this->name . '/' . $this->name . '.m3u8';
+        Feed::where('uuid', $this->uuid)->update(['src' =>   env('APP_URL') . '/api/watch/' . $this->name . '.m3u8']);
         file_put_contents($filename, $playlist_content);
         File::delete($this->file);
     }

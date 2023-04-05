@@ -18,7 +18,7 @@ class ThumbCreator implements ShouldQueue
      *
      * @return void
      */
-    public $timeout = 120;
+    public $timeout = 300;
     public $failOnTimeout = true;
 
     protected $file, $name, $postUuid;

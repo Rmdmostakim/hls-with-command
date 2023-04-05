@@ -40,8 +40,8 @@ class FeedController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'caption' => 'bail|required|string|min:3',
-            'p_category_uuid' => 'bail|required|string|exists:feed_p_categories,uuid',
-            'products.*' => 'bail|required|string|exists:products,uuid',
+            'p_category_uuid' => 'bail|required|string',
+            'products.*' => 'bail|required|string',
             'images.*' => 'bail|nullable|string',
             'video' => 'bail|nullable|string',
             'type' => 'bail|required|max:2',

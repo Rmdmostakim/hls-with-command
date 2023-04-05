@@ -2,27 +2,24 @@
 
 namespace App\Services;
 
-use Token;
-use Exception;
-use FileSystem;
+use App\Jobs\ConvertHighQuality;
+use App\Jobs\ConvertLowQuality;
+use App\Jobs\ConvertMidQuality;
+use App\Jobs\MasterPlaylist;
+use App\Jobs\ThumbCreator;
 use App\Models\Feed;
-use App\Models\Product;
-use App\Jobs\PostCreator;
 use App\Models\FeedComment;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Models\FeedGCategory;
 use App\Models\FeedLike;
 use App\Models\FeedPCategory;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Product;
 use App\Repositories\FeedRepositoryInterface;
-use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
-use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
-use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
-use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
-use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
+use Exception;
+use FileSystem;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Token;
 
 class FeedRepositoryServices implements FeedRepositoryInterface
 {
@@ -84,8 +81,12 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
             $store = $this->storeFeed($credentials, $token);
             if ($store) {
-                $postJob = new PostCreator(Str::replace(env('APP_URL') . '/', '', $credentials['video']), $store->uuid);
-                \dispatch($postJob);
+                $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['video']);
+                ThumbCreator::dispatch($videoUrl);
+                ConvertLowQuality::dispatch($videoUrl);
+                ConvertMidQuality::dispatch($videoUrl);
+                ConvertHighQuality::dispatch($videoUrl);
+                MasterPlaylist::dispatch($videoUrl, $store->uuid);
                 return response('success', 201);
             }
         } else {
@@ -117,7 +118,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 'feed_p_category_uuid' => $credentials['p_category_uuid'],
                 'product_uuid' => $productIds,
                 'type' => $credentials['type'],
-                'src' => $credentials['type'] == 0 ? $credentials['video'] : json_encode($credentials['images']),
+                'src' => $credentials['type'] == 0 ? json_encode($credentials['video']) : json_encode($credentials['images']),
                 'is_active' => $credentials['type'] == 0 ? 0 : 1,
             ]);
             return $result;
@@ -145,7 +146,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             'comment.reply.profile:user_uuid,path',
         )->orderBy('id', 'DESC')->paginate(10);
     }
-    // get all g cat 
+    // get all g cat
     public function getAllGcat()
     {
         return FeedGCategory::with('category')->get();
