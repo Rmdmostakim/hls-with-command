@@ -7,22 +7,19 @@ use Exception;
 use FileSystem;
 use App\Models\Feed;
 use App\Models\Product;
-use App\Jobs\PostCreator;
+use App\Models\FeedLike;
+use App\Jobs\ThumbCreator;
 use App\Models\FeedComment;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Models\FeedGCategory;
-use App\Models\FeedLike;
+use App\Jobs\MasterPlaylist;
 use App\Models\FeedPCategory;
+use App\Models\FeedGCategory;
+use App\Jobs\ConvertHighQuality;
+use App\Jobs\ConvertLowQuality;
+use App\Jobs\ConvertMidQuality;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Validator;
 use App\Repositories\FeedRepositoryInterface;
-use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
-use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
-use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
-use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
-use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
 
 class FeedRepositoryServices implements FeedRepositoryInterface
 {
@@ -46,7 +43,6 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     // store parent category for feed
     public function storePcat($credentials)
     {
-
         try {
             $result = FeedPCategory::create([
                 'uuid' => Str::uuid(),
@@ -84,8 +80,13 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
             $store = $this->storeFeed($credentials, $token);
             if ($store) {
-                $postJob = new PostCreator(Str::replace(env('APP_URL') . '/', '', $credentials['video']), $store->uuid);
-                \dispatch($postJob);
+                $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['video']);
+                $job = new ConvertLowQuality($videoUrl, $store->uuid);
+                \dispatch($job);
+                // ThumbCreator::dispatch($videoUrl);
+                // ConvertMidQuality::dispatch($videoUrl);
+                // ConvertHighQuality::dispatch($videoUrl);
+                // MasterPlaylist::dispatch($videoUrl, $store->uuid);
                 return response('success', 201);
             }
         } else {
@@ -105,6 +106,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
         return response(['message' => 'not accepted'], 406);
     }
     protected function storeFeed($credentials, $token)
+
     {
         $productIds = Product::whereIn('uuid', $credentials['products'])->pluck('id');
         $tokenInfo = Token::decode($token);
@@ -366,5 +368,22 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             'comment.reply.profile:user_uuid,path',
 
         )->first();
+    }
+    // get feed by type
+    public function getFeedByType($credentials)
+    {
+        return  Feed::where('user_type', $credentials['type'])->where('is_active', 1)->with(
+
+            'merchant.info:merchant_uuid,company_logo',
+            'product:id,uuid,name',
+            'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
+            'product.details.cover',
+            'like',
+            'comment.userInfo:user_uuid,user_name',
+            'comment.profile:user_uuid,path',
+            'comment.reply.userInfo:user_uuid,user_name',
+            'comment.reply.profile:user_uuid,path',
+
+        )->paginate(10);
     }
 }
