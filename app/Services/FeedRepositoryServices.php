@@ -383,7 +383,6 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             'comment.profile:user_uuid,path',
             'comment.reply.userInfo:user_uuid,user_name',
             'comment.reply.profile:user_uuid,path',
-
-        )->paginate(10);
+        )->orderBy('id', 'DESC')->paginate(10);
     }
 }
