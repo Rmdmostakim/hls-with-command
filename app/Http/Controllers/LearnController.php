@@ -11,31 +11,71 @@ class LearnController extends Controller
     public function createLearn(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'dp_category' => 'bail|required|string|exists:dp_categories,uuid',
             'title' => 'bail|required|string|min:3',
-            'overview' => 'bail|required|string|min:3',
-            'slot' => 'bail|required|numeric',
-            'type' => 'bail|required|numeric',
-            'level' => 'bail|required|string',
+            'category' => 'bail|required|string|exists:dp_categories,uuid',
+            'certification' => 'bail|required|numeric|min:0|max:1',
             'language' => 'bail|required|string|min:3',
-            'certification.*' => 'bail|required|mimes:jpg,jpeg,png,webp,pdf',
+            'type' => 'bail|required|numeric|min:0|max:1',
+            'level' => 'bail|required|string|min:3',
+            'overview' => 'bail|required|string|min:3',
+            'slot' => 'bail|nullable|numeric',
+
+            'price' => 'bail|required|numeric|min:0',
+            'discount' => 'bail|nullable|numeric|min:0',
+            'discountType' => 'bail|nullable|numeric|max:1|min:0',
+            'discountDuration' => 'bail|nullable|string',
+            'cover' => 'bail|required|string',
+            'promo' => 'bail|required|string',
+
+            'chapter' => 'bail|required|array|min:1',
+
+
         ]);
         if ($validator->fails()) {
             return response($validator->messages(), 422);
         }
-        $validated = $request->only(['dp_category', 'title', 'overview', 'slot', 'type', 'level', 'language', 'certification']);
-        return Learn::createLearn($validated);
+        $token = $request->header('token');
+        $validated = $request->only(['title', 'category', 'certification', 'language', 'type', 'level', 'overview', 'slot', 'price', 'discount', 'discountType', 'discountDuration', 'cover', 'promo', 'chapter']);
+
+        foreach ($validated['chapter'] as $chapter) {
+            if (!$chapter['title']) {
+                $response = ['message' => array((int)$validated['type'] == 1 ? 'sesson title field required' : 'chapter title field required')];
+                return response($response, 422);
+            }
+            if (!$chapter['duration']) {
+                $response = ['message' => array((int)$validated['type'] == 1 ? 'sesson duration field required' : 'chapter duration field required')];
+                return response($response, 422);
+            }
+            if ((int)$validated['type'] == 1 && !$chapter['schedule']) {
+                $response = ['message' => array('sesson schedule field required')];
+                return response($response, 422);
+            }
+
+            foreach ($chapter['lesson'] as $lesson) {
+                if (!$lesson['title']) {
+                    $response = ['title' => array('lesson title  required')];
+                    return response($response, 422);
+                }
+                if ((int)$validated['type'] == 0 && !$lesson['streamPath']) {
+                    $response = ['streamPath' => array('streamPath required')];
+                    return response($response, 422);
+                }
+            }
+        }
+
+
+        return Learn::createLearn($validated, $token);
     }
     public function learnDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'learn_uuid' => 'bail|required|string|exists:learns,uuid',
-            'price' => 'bail|required|string',
-            'discount' => 'bail|required|string',
-            'discount_type' => 'bail|required',
-            'discount_duration' => 'bail|required',
-            'type' => 'bail|required|string',
-            'src.*' => 'bail|required',
+            // 'learn_uuid' => 'bail|required|string|exists:learns,uuid',
+            // 'price' => 'bail|required|string',
+            // 'discount' => 'bail|required|string',
+            // 'discount_type' => 'bail|required',
+            // 'discount_duration' => 'bail|required',
+            // 'type' => 'bail|required|string',
+            // 'src.*' => 'bail|required',
 
         ]);
         if ($validator->fails()) {
@@ -47,10 +87,10 @@ class LearnController extends Controller
     public function learnSession(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'learn_uuid' => 'bail|required|string|exists:learns,uuid',
-            'duration' => 'bail|required|string',
-            'title' => 'bail|required|string',
-            'schedule' => 'bail|required',
+            // 'learn_uuid' => 'bail|required|string|exists:learns,uuid',
+            // 'duration' => 'bail|required|string',
+            // 'title' => 'bail|required|string',
+            // 'schedule' => 'bail|required',
         ]);
         if ($validator->fails()) {
             return response($validator->messages(), 422);
@@ -61,10 +101,10 @@ class LearnController extends Controller
     public function learnLession(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'session_uuid' => 'bail|required|string|exists:learns,uuid',
-            'title' => 'bail|required|string',
-            'stream_path' => 'bail|required|string',
-            'thumbnail' => 'bail|required',
+            // 'session_uuid' => 'bail|required|string|exists:learns,uuid',
+            // 'title' => 'bail|required|string',
+            // 'stream_path' => 'bail|required|string',
+            // 'thumbnail' => 'bail|required',
         ]);
         if ($validator->fails()) {
             return response($validator->messages(), 422);

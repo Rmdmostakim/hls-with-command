@@ -16,17 +16,12 @@ class LearnDetail extends Model
         'discount',
         'discount_type',
         'discount_duration',
-        'src',
-        'type',
-        'thumbnail',
+        'cover',
+        'promo',
 
     ];
 
-    protected $attributes = [
-        'thumbnail' => null,
-
-
-    ];
+    protected $attributes = [];
 
     protected $hidden = [
         'id',

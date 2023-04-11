@@ -17,12 +17,11 @@ class CreateLearnDetailsTable extends Migration
             $table->id();
             $table->string('learn_uuid');
             $table->decimal('price', 8, 2);
-            $table->decimal('discount', 8, 2);
-            $table->tinyInteger('discount_type');
-            $table->string('discount_duration');
-            $table->json('src');
-            $table->tinyInteger('type');
-            $table->string('thumbnail')->nullable();
+            $table->decimal('discount', 8, 2)->nullable();
+            $table->tinyInteger('discount_type')->nullable();
+            $table->string('discount_duration')->nullable();
+            $table->string('cover');
+            $table->string('promo');
             $table->timestamps();
         });
     }

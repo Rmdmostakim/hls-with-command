@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Token;
 use Exception;
 use App\Models\Learn;
 use App\Models\LearnDetail;
@@ -13,13 +14,14 @@ use App\Repositories\LearnRepositoryInterface;
 
 class LearnRepositoryServices implements LearnRepositoryInterface
 {
-    public function createLearn($credentials)
+    public function createLearn($credentials, $token)
     {
+        $tokenInfo = Token::decode($token);
         try {
             $result = Learn::create([
                 'uuid' => Str::uuid(),
-                'instructor_uuid' => $credentials['instuctor_uuid'],
-                'dp_category' => $credentials['dp_category'],
+                'instructor_uuid' => $tokenInfo['uuid'],
+                'dp_category' => $credentials['category'],
                 'title' => $credentials['title'],
                 'overview' => $credentials['overview'],
                 'slot' => $credentials['slot'],
@@ -32,6 +34,74 @@ class LearnRepositoryServices implements LearnRepositoryInterface
             Log::error($e);
             $result = false;
         }
+        if ($result) {
+            try {
+                $result = LearnDetail::create([
+                    'uuid' => Str::uuid(),
+                    'learn_uuid' => $result['uuid'],
+                    'price' => $credentials['price'],
+                    'discount' => $credentials['discount'],
+                    'discount_type' => $credentials['discountType'],
+                    'discount_duration' => $credentials['discountDuration'],
+                    'cover' => $credentials['cover'],
+                    'promo' => $credentials['promo'],
+
+                ]);
+            } catch (Exception $e) {
+                Log::error($e);
+                $result = false;
+                Learn::where('uuid', $result['uuid'])->delete();
+            }
+        }
+
+        if ($result) {
+            foreach ($credentials['chapter'] as $chapter) {
+                try {
+                    $result = LearnSession::create([
+                        'uuid' => Str::uuid(),
+                        'learn_uuid' => $result['learn_uuid'],
+                        'title' => $chapter['title'],
+                        'duration' => $chapter['duration'],
+                        'schedule' => $chapter['schedule'],
+                    ]);
+                } catch (Exception $e) {
+                    Log::error($e);
+                    Learn::where('uuid', $result['learn_uuid'])->delete();
+                    LearnDetail::where('learn_uuid', $result['learn_uuid'])->delete();
+                    $result = false;
+                    break;
+                }
+            }
+        }
+        if ($result) {
+            return $result;
+        }
+        // if ($result) {
+        //     foreach ($credentials['chapter'] as $chapter) {
+        //         try {
+        //             $result = LearnSession::create([
+        //                 'learn_uuid' => $result['learn_uuid'],
+        //                 'title' => $chapter['title'],
+        //                 'duration' => $chapter['duration'],
+        //                 'schedule' => $chapter['schedule'],
+        //             ]);
+        //             foreach ($chapter['lesson'] as $lesson) {
+        //                 $result = LearnLession::create([
+        //                     'uuid' => Str::uuid(),
+        //                     'session_uuid' => $result['uuid'],
+        //                     'title' => $lesson['title'],
+        //                     'stream_path' => $lesson['streamPath'],
+        //                 ]);
+        //             }
+        //         } catch (Exception $e) {
+        //             Log::error($e);
+        //             $result = false;
+        //             Learn::where('uuid', $result['learn_uuid'])->delete();
+        //             LearnDetail::where('learn_uuid', $result['learn_uuid'])->delete();
+        //             return response('not acceptable', 406);
+        //         }
+        //     }
+        // }
     }
     public function learnDetails($credentials)
     {

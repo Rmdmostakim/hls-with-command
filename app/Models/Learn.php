@@ -21,12 +21,14 @@ class Learn extends Model
         'language',
         'certification',
         'status',
+        'approved',
 
     ];
 
     protected $attributes = [
 
         'status' => 0,
+        'approved' => 0,
 
     ];
 

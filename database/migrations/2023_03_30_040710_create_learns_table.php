@@ -20,11 +20,12 @@ class CreateLearnsTable extends Migration
             $table->string('dp_category');
             $table->string('title');
             $table->mediumText('overview');
-            $table->integer('slot');
+            $table->integer('slot')->nullable();
             $table->tinyInteger('type');
             $table->string('level');
             $table->string('language');
             $table->string('certification');
+            $table->boolean('approved');
             $table->boolean('status');
             $table->timestamps();
         });
