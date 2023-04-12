@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('FeedRepositoryServices', function ($app) {
             return new FeedRepositoryServices;
         });
-        // feed services register
+        // learn services register
         $this->app->singleton('LearnRepositoryServices', function ($app) {
             return new LearnRepositoryServices;
         });
