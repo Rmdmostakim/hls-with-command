@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Learn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Learn;
 
 class LearnController extends Controller
 {
@@ -56,9 +56,16 @@ class LearnController extends Controller
                     $response = ['title' => array('lesson title  required')];
                     return response($response, 422);
                 }
-                if ((int)$validated['type'] == 0 && !$lesson['streamPath']) {
-                    $response = ['streamPath' => array('streamPath required')];
+                if ((int)$validated['type'] == 0 && empty($lesson['streamPath'])) {
+                    $response = ['video' => array('video is not uploaded')];
                     return response($response, 422);
+                } else {
+                    $filePath = Str::replace(env('APP_URL') . '/', '', $lesson['streamPath']);
+                    $exists = File::exists($filePath);
+                    if (!$exists) {
+                        $response = ['video' => array('invalid video url')];
+                        return response($response, 422);
+                    }
                 }
             }
         }

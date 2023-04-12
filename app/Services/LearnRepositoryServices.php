@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\LearnJob;
 use App\Models\Learn;
 use App\Models\LearnDetail;
 use App\Models\LearnLession;
@@ -43,6 +44,9 @@ class LearnRepositoryServices implements LearnRepositoryInterface
                 'promo' => $credentials['promo'],
 
             ]);
+            $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['promo']);
+            $job = new LearnJob($videoUrl, $learn->uuid);
+            \dispatch($job);
             foreach ($credentials['chapter'] as $chapter) {
                 $session = LearnSession::create([
                     'uuid' => Str::uuid(),
@@ -58,22 +62,26 @@ class LearnRepositoryServices implements LearnRepositoryInterface
                             'title' => $lesson['title'],
                             'stream_path' => $lesson['streamPath'],
                         ]);
+                        $videoUrl = Str::replace(env('APP_URL') . '/', '', $lesson['streamPath']);
+                        $job = new LearnJob($videoUrl, $learn->uuid);
+                        \dispatch($job);
                     } catch (Exception $e) {
                         Log::error($e);
                         DB::rollBack();
-                        return response(['error' => 'Failed to create lesson'], 406);
+                        return response(['error' => 'Failed to create lesson'], Response::HTTP_INTERNAL_SERVER_ERROR);
                     }
                 }
             }
-
             DB::commit();
         } catch (Exception $e) {
             Log::error($e);
             DB::rollBack();
-            return response(['error' => 'Failed to create course'], 406);
+            return response(['error' => 'Failed to create course'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        return response(['message' => 'Course created successfully'], 201);
+        return response(['message' => 'Course created successfully'], Response::HTTP_CREATED);
     }
+
+
     public function learnDetails($credentials)
     {
         try {

@@ -2,24 +2,20 @@
 
 namespace App\Services;
 
-use Token;
+use App\Jobs\ConvertLowQuality;
+use App\Models\Feed;
+use App\Models\FeedComment;
+use App\Models\FeedGCategory;
+use App\Models\FeedLike;
+use App\Models\FeedPCategory;
+use App\Models\Product;
+use App\Repositories\FeedRepositoryInterface;
 use Exception;
 use FileSystem;
-use App\Models\Feed;
-use App\Models\Product;
-use App\Models\FeedLike;
-use App\Jobs\ThumbCreator;
-use App\Models\FeedComment;
-use Illuminate\Support\Str;
-use App\Jobs\MasterPlaylist;
-use App\Models\FeedPCategory;
-use App\Models\FeedGCategory;
-use App\Jobs\ConvertHighQuality;
-use App\Jobs\ConvertLowQuality;
-use App\Jobs\ConvertMidQuality;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
-use App\Repositories\FeedRepositoryInterface;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Token;
 
 class FeedRepositoryServices implements FeedRepositoryInterface
 {
@@ -43,6 +39,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     // store parent category for feed
     public function storePcat($credentials)
     {
+
         try {
             $result = FeedPCategory::create([
                 'uuid' => Str::uuid(),
@@ -83,10 +80,6 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['video']);
                 $job = new ConvertLowQuality($videoUrl, $store->uuid);
                 \dispatch($job);
-                // ThumbCreator::dispatch($videoUrl);
-                // ConvertMidQuality::dispatch($videoUrl);
-                // ConvertHighQuality::dispatch($videoUrl);
-                // MasterPlaylist::dispatch($videoUrl, $store->uuid);
                 return response('success', 201);
             }
         } else {
@@ -106,7 +99,6 @@ class FeedRepositoryServices implements FeedRepositoryInterface
         return response(['message' => 'not accepted'], 406);
     }
     protected function storeFeed($credentials, $token)
-
     {
         $productIds = Product::whereIn('uuid', $credentials['products'])->pluck('id');
         $tokenInfo = Token::decode($token);
@@ -149,9 +141,9 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
             'comment.reply.profile:user_uuid,path',
 
-        )->orderBy('id', 'DESC')->paginate(10);
+        )->orderBy('id', 'DESC')->paginate(100);
     }
-    // get all g cat 
+    // get all g cat
     public function getAllGcat()
     {
         return FeedGCategory::with('category')->get();
@@ -383,6 +375,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             'comment.profile:user_uuid,path',
             'comment.reply.userInfo:user_uuid,user_name',
             'comment.reply.profile:user_uuid,path',
+
         )->orderBy('id', 'DESC')->paginate(10);
     }
 }
