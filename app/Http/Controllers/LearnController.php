@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Learn;
 
 class LearnController extends Controller
@@ -50,6 +52,28 @@ class LearnController extends Controller
                 $response = ['message' => array('sesson schedule field required')];
                 return response($response, 422);
             }
+            if (empty($validated['cover'])) {
+                $response = ['cover' => array('cover is not uploaded')];
+                return response($response, 422);
+            } else {
+                $filePath = Str::replace(env('APP_URL') . '/', '', $validated['cover']);
+                $exists = File::exists($filePath);
+                if (!$exists) {
+                    $response = ['cover' => array('invalid cover url')];
+                    return response($response, 422);
+                }
+            }
+            if (empty($validated['promo'])) {
+                $response = ['promo' => array('promo is not uploaded')];
+                return response($response, 422);
+            } else {
+                $filePath = Str::replace(env('APP_URL') . '/', '', $validated['promo']);
+                $exists = File::exists($filePath);
+                if (!$exists) {
+                    $response = ['promo' => array('invalid promo url')];
+                    return response($response, 422);
+                }
+            }
 
             foreach ($chapter['lesson'] as $lesson) {
                 if (!$lesson['title']) {
@@ -57,13 +81,13 @@ class LearnController extends Controller
                     return response($response, 422);
                 }
                 if ((int)$validated['type'] == 0 && empty($lesson['streamPath'])) {
-                    $response = ['video' => array('video is not uploaded')];
+                    $response = ['lesson video' => array('lesson video is not uploaded')];
                     return response($response, 422);
                 } else {
                     $filePath = Str::replace(env('APP_URL') . '/', '', $lesson['streamPath']);
                     $exists = File::exists($filePath);
                     if (!$exists) {
-                        $response = ['video' => array('invalid video url')];
+                        $response = ['lesson video' => array('invalid lesson video url')];
                         return response($response, 422);
                     }
                 }

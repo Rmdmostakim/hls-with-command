@@ -45,7 +45,7 @@ class LearnRepositoryServices implements LearnRepositoryInterface
 
             ]);
             $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['promo']);
-            $job = new LearnJob($videoUrl, $learn->uuid);
+            $job = new LearnJob($videoUrl, $learn->uuid, 'chapter');
             \dispatch($job);
             foreach ($credentials['chapter'] as $chapter) {
                 $session = LearnSession::create([
@@ -62,13 +62,13 @@ class LearnRepositoryServices implements LearnRepositoryInterface
                             'title' => $lesson['title'],
                             'stream_path' => $lesson['streamPath'],
                         ]);
-                        $videoUrl = Str::replace(env('APP_URL') . '/', '', $lesson['streamPath']);
-                        $job = new LearnJob($videoUrl, $learn->uuid);
+                        $videoUrl = Str::replace(env('APP_URL') . '/', '', $lesson->stream_path);
+                        $job = new LearnJob($videoUrl, $session->uuid, 'lesson');
                         \dispatch($job);
                     } catch (Exception $e) {
                         Log::error($e);
                         DB::rollBack();
-                        return response(['error' => 'Failed to create lesson'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                        return response(['error' => 'Failed to create lesson'], 406);
                     }
                 }
             }
@@ -76,9 +76,9 @@ class LearnRepositoryServices implements LearnRepositoryInterface
         } catch (Exception $e) {
             Log::error($e);
             DB::rollBack();
-            return response(['error' => 'Failed to create course'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['error' => 'Failed to create course'], 406);
         }
-        return response(['message' => 'Course created successfully'], Response::HTTP_CREATED);
+        return response(['message' => 'Course created successfully'], 201);
     }
 
 

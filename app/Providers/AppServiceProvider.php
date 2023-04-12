@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Services\FeedRepositoryServices;
 use App\Services\LearnRepositoryServices;
 use App\Services\TokenRepositoryServices;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

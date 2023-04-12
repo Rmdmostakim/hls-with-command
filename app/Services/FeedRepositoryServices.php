@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Jobs\ConvertLowQuality;
+use App\Jobs\FeedJob;
 use App\Models\Feed;
 use App\Models\FeedComment;
 use App\Models\FeedGCategory;
@@ -78,7 +78,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             $store = $this->storeFeed($credentials, $token);
             if ($store) {
                 $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['video']);
-                $job = new ConvertLowQuality($videoUrl, $store->uuid);
+                $job = new FeedJob($videoUrl, $store->uuid);
                 \dispatch($job);
                 return response('success', 201);
             }
