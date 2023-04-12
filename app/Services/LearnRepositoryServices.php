@@ -2,23 +2,25 @@
 
 namespace App\Services;
 
-use Token;
-use Exception;
 use App\Models\Learn;
 use App\Models\LearnDetail;
 use App\Models\LearnLession;
 use App\Models\LearnSession;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 use App\Repositories\LearnRepositoryInterface;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Token;
 
 class LearnRepositoryServices implements LearnRepositoryInterface
 {
     public function createLearn($credentials, $token)
     {
         $tokenInfo = Token::decode($token);
+        DB::beginTransaction();
         try {
-            $result = Learn::create([
+            $learn = Learn::create([
                 'uuid' => Str::uuid(),
                 'instructor_uuid' => $tokenInfo['uuid'],
                 'dp_category' => $credentials['category'],
@@ -30,78 +32,46 @@ class LearnRepositoryServices implements LearnRepositoryInterface
                 'language' => $credentials['language'],
                 'certification' => $credentials['certification']
             ]);
-        } catch (Exception $e) {
-            Log::error($e);
-            $result = false;
-        }
-        if ($result) {
-            try {
-                $result = LearnDetail::create([
-                    'uuid' => Str::uuid(),
-                    'learn_uuid' => $result['uuid'],
-                    'price' => $credentials['price'],
-                    'discount' => $credentials['discount'],
-                    'discount_type' => $credentials['discountType'],
-                    'discount_duration' => $credentials['discountDuration'],
-                    'cover' => $credentials['cover'],
-                    'promo' => $credentials['promo'],
+            $details = LearnDetail::create([
+                'uuid' => Str::uuid(),
+                'learn_uuid' => $learn['uuid'],
+                'price' => $credentials['price'],
+                'discount' => $credentials['discount'],
+                'discount_type' => $credentials['discountType'],
+                'discount_duration' => $credentials['discountDuration'],
+                'cover' => $credentials['cover'],
+                'promo' => $credentials['promo'],
 
-                ]);
-            } catch (Exception $e) {
-                Log::error($e);
-                $result = false;
-                Learn::where('uuid', $result['uuid'])->delete();
-            }
-        }
-
-        if ($result) {
+            ]);
             foreach ($credentials['chapter'] as $chapter) {
-                try {
-                    $result = LearnSession::create([
-                        'uuid' => Str::uuid(),
-                        'learn_uuid' => $result['learn_uuid'],
-                        'title' => $chapter['title'],
-                        'duration' => $chapter['duration'],
-                        'schedule' => $chapter['schedule'],
-                    ]);
-                } catch (Exception $e) {
-                    Log::error($e);
-                    Learn::where('uuid', $result['learn_uuid'])->delete();
-                    LearnDetail::where('learn_uuid', $result['learn_uuid'])->delete();
-                    $result = false;
-                    break;
+                $session = LearnSession::create([
+                    'uuid' => Str::uuid(),
+                    'learn_uuid' => $learn['uuid'],
+                    'title' => $chapter['title'],
+                    'duration' => $chapter['duration'],
+                    'schedule' => $chapter['schedule'],
+                ]);
+                foreach ($chapter['lesson'] as $lesson) {
+                    try {
+                        $lesson = LearnLession::create([
+                            'session_uuid' => $session['uuid'],
+                            'title' => $lesson['title'],
+                            'stream_path' => $lesson['streamPath'],
+                        ]);
+                    } catch (Exception $e) {
+                        Log::error($e);
+                        DB::rollBack();
+                        return response(['error' => 'Failed to create lesson'], 406);
+                    }
                 }
             }
+            DB::commit();
+        } catch (Exception $e) {
+            Log::error($e);
+            DB::rollBack();
+            return response(['error' => 'Failed to create course'], 406);
         }
-        if ($result) {
-            return $result;
-        }
-        // if ($result) {
-        //     foreach ($credentials['chapter'] as $chapter) {
-        //         try {
-        //             $result = LearnSession::create([
-        //                 'learn_uuid' => $result['learn_uuid'],
-        //                 'title' => $chapter['title'],
-        //                 'duration' => $chapter['duration'],
-        //                 'schedule' => $chapter['schedule'],
-        //             ]);
-        //             foreach ($chapter['lesson'] as $lesson) {
-        //                 $result = LearnLession::create([
-        //                     'uuid' => Str::uuid(),
-        //                     'session_uuid' => $result['uuid'],
-        //                     'title' => $lesson['title'],
-        //                     'stream_path' => $lesson['streamPath'],
-        //                 ]);
-        //             }
-        //         } catch (Exception $e) {
-        //             Log::error($e);
-        //             $result = false;
-        //             Learn::where('uuid', $result['learn_uuid'])->delete();
-        //             LearnDetail::where('learn_uuid', $result['learn_uuid'])->delete();
-        //             return response('not acceptable', 406);
-        //         }
-        //     }
-        // }
+        return response(['message' => 'Course created successfully'], 201);
     }
     public function learnDetails($credentials)
     {
