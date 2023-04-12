@@ -65,6 +65,7 @@ class LearnRepositoryServices implements LearnRepositoryInterface
                     }
                 }
             }
+
             DB::commit();
         } catch (Exception $e) {
             Log::error($e);
