@@ -211,4 +211,36 @@ class FeedController extends Controller
 
         return Feed::deleteFeedComment($validated, $token);
     }
+    // get feed by uuid
+    public function getFeedByUuid(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+
+            'uuid' => 'bail|required|string|exists:feeds,uuid',
+
+        ]);
+
+        if ($validator->fails()) {
+
+            return response($validator->messages(), 422);
+        }
+
+        $validated = $request->only(['uuid']);
+
+        return Feed::getFeedByUuid($validated);
+    }
+    // get feed by type
+    public function getFeedByType(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'type' => 'bail|required|numeric|max:2',
+        ]);
+        if ($validator->fails()) {
+            return response($validator->messages(), 422);
+        }
+        $validated = $request->only(['type']);
+        return Feed::getFeedByType($validated);
+    }
 }

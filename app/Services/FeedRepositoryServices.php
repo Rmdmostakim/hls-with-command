@@ -2,11 +2,7 @@
 
 namespace App\Services;
 
-use App\Jobs\ConvertHighQuality;
-use App\Jobs\ConvertLowQuality;
-use App\Jobs\ConvertMidQuality;
-use App\Jobs\MasterPlaylist;
-use App\Jobs\ThumbCreator;
+use App\Jobs\FeedJob;
 use App\Models\Feed;
 use App\Models\FeedComment;
 use App\Models\FeedGCategory;
@@ -82,11 +78,8 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             $store = $this->storeFeed($credentials, $token);
             if ($store) {
                 $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['video']);
-                ThumbCreator::dispatch($videoUrl);
-                ConvertLowQuality::dispatch($videoUrl);
-                ConvertMidQuality::dispatch($videoUrl);
-                ConvertHighQuality::dispatch($videoUrl);
-                MasterPlaylist::dispatch($videoUrl, $store->uuid);
+                $job = new FeedJob($videoUrl, $store->uuid);
+                \dispatch($job);
                 return response('success', 201);
             }
         } else {
@@ -109,6 +102,9 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     {
         $productIds = Product::whereIn('uuid', $credentials['products'])->pluck('id');
         $tokenInfo = Token::decode($token);
+        if ($credentials['type'] == 0) {
+            $myarray[] = $credentials['video'];
+        }
         try {
             $result = Feed::create([
                 'uuid' => Str::uuid(),
@@ -118,7 +114,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
                 'feed_p_category_uuid' => $credentials['p_category_uuid'],
                 'product_uuid' => $productIds,
                 'type' => $credentials['type'],
-                'src' => $credentials['type'] == 0 ? json_encode($credentials['video']) : json_encode($credentials['images']),
+                'src' => $credentials['type'] == 0 ? json_encode($myarray) : $credentials['images'],
                 'is_active' => $credentials['type'] == 0 ? 0 : 1,
             ]);
             return $result;
@@ -130,7 +126,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
     // get all feed
     public function getAllFeed()
     {
-        return Feed::with(
+        return Feed::where('is_active', 1)->with(
             'merchant.info:merchant_uuid,company_logo',
             'product:id,uuid,name',
             'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
@@ -144,7 +140,8 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             'comment.reply.userInfo:user_uuid,user_name',
 
             'comment.reply.profile:user_uuid,path',
-        )->orderBy('id', 'DESC')->paginate(10);
+
+        )->orderBy('id', 'DESC')->paginate(100);
     }
     // get all g cat
     public function getAllGcat()
@@ -343,5 +340,42 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
 
         return response(['message' => 'not acceptable'], 406);
+    }
+    // get feed by uuid
+    public function getFeedByUuid($credentials)
+    {
+        return  Feed::where('uuid', $credentials['uuid'])->where('is_active', 1)->with(
+            'merchant.info:merchant_uuid,company_logo',
+            'product:id,uuid,name',
+            'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
+            'product.details.cover',
+            'like',
+
+            'comment.userInfo:user_uuid,user_name',
+
+            'comment.profile:user_uuid,path',
+
+            'comment.reply.userInfo:user_uuid,user_name',
+
+            'comment.reply.profile:user_uuid,path',
+
+        )->first();
+    }
+    // get feed by type
+    public function getFeedByType($credentials)
+    {
+        return  Feed::where('user_type', $credentials['type'])->where('is_active', 1)->with(
+
+            'merchant.info:merchant_uuid,company_logo',
+            'product:id,uuid,name',
+            'product.details:product_uuid,price,cover,stock,discount,discount_type,discount_duration',
+            'product.details.cover',
+            'like',
+            'comment.userInfo:user_uuid,user_name',
+            'comment.profile:user_uuid,path',
+            'comment.reply.userInfo:user_uuid,user_name',
+            'comment.reply.profile:user_uuid,path',
+
+        )->orderBy('id', 'DESC')->paginate(10);
     }
 }

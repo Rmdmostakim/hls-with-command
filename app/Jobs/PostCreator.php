@@ -16,8 +16,12 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use Throwable;
 
+<<<<<<< HEAD
 ini_set('memory_limit', '1G');
 class PostCreator implements ShouldQueue
+=======
+class PostCreator implements ShouldQueue, ShouldBeUnique
+>>>>>>> sohan
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

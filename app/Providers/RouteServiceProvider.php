@@ -50,6 +50,10 @@ class RouteServiceProvider extends ServiceProvider
             Route::prefix('feed')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/feed.php'));
+            // learn api
+            Route::prefix('learn')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/learn.php'));
         });
     }
 

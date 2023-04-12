@@ -41,6 +41,7 @@ class Feed extends Model
     ];
     protected $casts = [
         'product_uuid' => 'array',
+        'src' => 'array',
     ];
     public function merchant()
     {
