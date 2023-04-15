@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Jobs\FeedJob;
+use App\Jobs\ConvertLowQuality;
 use App\Models\Feed;
 use App\Models\FeedComment;
 use App\Models\FeedGCategory;
@@ -78,11 +78,15 @@ class FeedRepositoryServices implements FeedRepositoryInterface
             $store = $this->storeFeed($credentials, $token);
             if ($store) {
                 $videoUrl = Str::replace(env('APP_URL') . '/', '', $credentials['video']);
-                $job = new FeedJob($videoUrl, $store->uuid);
+                $job = new ConvertLowQuality($videoUrl, $store->uuid);
                 \dispatch($job);
                 return response('success', 201);
             }
         } else {
+            if (count($credentials['images']) <= 0) {
+                $response = ['images' => array('empty images url')];
+                return response($response, 422);
+            }
             foreach ($credentials['images'] as $image) {
                 $filePath = Str::replace(env('APP_URL') . '/', '', $image);
                 $exists = File::exists($filePath);
@@ -141,7 +145,7 @@ class FeedRepositoryServices implements FeedRepositoryInterface
 
             'comment.reply.profile:user_uuid,path',
 
-        )->orderBy('id', 'DESC')->paginate(100);
+        )->orderBy('id', 'DESC')->paginate(4);
     }
     // get all g cat
     public function getAllGcat()
